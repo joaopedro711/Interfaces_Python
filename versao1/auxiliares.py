@@ -51,7 +51,7 @@ def console_get(Estado):
     return window
 
 #atualiza toda parte GET do Console e coloca janela com mapa antes de apagar a mensagem
-def update_console(output_elem, url):
+def update_console(output_elem, url, update_queue):
     global localization
     while True:
         resposta = requisicoes.get_resposta(url)
@@ -60,8 +60,9 @@ def update_console(output_elem, url):
         if resposta != "Nenhuma mensagem_resposta foi postada ainda.":
             if len(resposta) > 30:
                 localization = resposta
-            output_elem.update(value=output_elem.get() + '\n' + resposta)
-            #apaga a ultima resposta, garante que vai pegar apenas uma vez a resposta
+            # output_elem.update(value=output_elem.get() + '\n' + resposta)
+            # #apaga a ultima resposta, garante que vai pegar apenas uma vez a resposta
+            update_queue.put(resposta)
             requisicoes.delete_resposta()
         time.sleep(2)
 

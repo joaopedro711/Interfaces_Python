@@ -7,20 +7,23 @@ import auxiliares
 
 # global update_thread
 # update_thread = None
+update_queue = queue.Queue()
+update_thread = None
 
 def log():
     #cria console
     new_window = auxiliares.console_get("Log")
 
     #Requisição GET
-    update_thread = threading.Thread(target=auxiliares.update_console, args=(new_window['OutputGet'], requisicoes.url_resposta))
+    update_thread = threading.Thread(target=auxiliares.update_console, args=(new_window['OutputGet'], requisicoes.url_resposta, update_queue))
     update_thread.start()
     
     while True:
-        event, values = new_window.read()
+        event, values = new_window.read(timeout=100)
         if event == sg.WINDOW_CLOSED or event == 'Fechar':
             # if update_thread is not None and update_thread.is_alive():
             #     update_thread.join()
+            #update_thread.join()               #espera terminar thread, mas enrola demais (não é boa pratica deixar sem essa ação)
             new_window.close()
             break
         elif event == 'Mostrar Mapa':
@@ -51,7 +54,11 @@ def log():
                         sg.popup_error('Digite valores válidos para Latitude e Longitude.')
             else:            
                 sg.popup_error('Ainda Não possui dados da última localização.',title="Map Error", icon='arapuka.ico')            
-
+        try:
+            resposta = update_queue.get_nowait()
+            new_window['OutputGet'].update(value=new_window['OutputGet'].get() + '\n' + resposta)
+        except queue.Empty:
+            pass
 
 # Funções para cada botão dos Estados
 def dormente():
